@@ -5,6 +5,8 @@
 
 GitHub action to generate PHP project documentation in [MarkDown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) format. Based on [evert/phpdoc-md](https://github.com/evert/phpdoc-md) library.
 
+***Warning***: at current moment this action doesn't work with PHP newer than 7.4.
+
 ## Usage
 
 To use this action in your project, create workflow in your project similar to this code (Note: some parts and arguments needs to be altered):
