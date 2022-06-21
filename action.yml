@@ -41,7 +41,7 @@ runs:
       shell: bash
 
     - name: Generating documentation...
-      run: composer global exec phpdocmd ${{ env.GENERATOR_TMP_FILES_PATH }}/structure.xml {{ inputs.output_path }}
+      run: composer global exec phpdocmd ${{ env.GENERATOR_TMP_FILES_PATH }}/structure.xml ${{ inputs.output_path }}
       shell: bash
 
     - name: Uninstalling evert/phpdoc-md...
