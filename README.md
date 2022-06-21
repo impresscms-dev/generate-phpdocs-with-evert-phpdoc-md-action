@@ -3,7 +3,7 @@
 
 # Generate PHP docs with evert/phpdoc-md
 
-GitHub action to generate PHP project documentation in [MarkDown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) format. Based on [clean/phpdoc-md](https://github.com/clean/phpdoc-md) library.
+GitHub action to generate PHP project documentation in [MarkDown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) format. Based on [evert/phpdoc-md](https://github.com/evert/phpdoc-md) library.
 
 ## Usage
 
