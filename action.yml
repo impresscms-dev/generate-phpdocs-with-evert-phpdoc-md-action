@@ -1,0 +1,54 @@
+name: 'Generate PHP docs with evert/phpdoc-md'
+description: 'GitHub action to generate PHP project documentation in MarkDown format. Based on evert/phpdoc-md library.'
+
+branding:
+  icon: book
+  color: red
+
+inputs:
+  ignored_files:
+    description: "Defines files that can be ignored (supports glob rules; each line means one rule)"
+    required: false
+    default: ''
+  phpdocumentor_version:
+    description: "What PHP Documentator version to use? (version = docker image tag)"
+    default: latest
+    required: false
+  output_path:
+    description: "Path where to write generated documentation"
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setting env variables...
+      run: |
+        echo "GENERATOR_TMP_FILES_PATH=${{ runner.temp }}/phpdocs-${{ github.sha }}-${{ github.run_id }}-${{ github.github.run_attempt }}" >> $GITHUB_ENV
+      shell: bash        
+  
+    - name: Creating tmp folders...
+      run: |
+        rm -rf ${{ env.GENERATOR_TMP_FILES_PATH }} || true
+        mkdir -p ${{ env.GENERATOR_TMP_FILES_PATH }}
+      shell: bash
+
+    - name: Running phpDocumentator...
+      run: bash ${{ github.action_path }}/bin/phpdoc.sh "${{ inputs.ignored_files }}" "${{ inputs.phpdocumentor_version }}"
+      shell: bash
+
+    - name: Installing evert/phpdoc-md...
+      run: composer global require 'evert/phpdoc-md=~0.2.0'
+      shell: bash
+
+    - name: Generating documentation...
+      run: composer global exec phpdocmd ${{ env.GENERATOR_TMP_FILES_PATH }}/structure.xml {{ inputs.output_path }}
+      shell: bash
+
+    - name: Uninstalling evert/phpdoc-md...
+      run: composer global remove evert/phpdoc-md
+      shell: bash
+
+    - name: Deleting tmp data...
+      run: |
+        rm -rf ${{ env.GENERATOR_TMP_FILES_PATH }} || true
+      shell: bash
