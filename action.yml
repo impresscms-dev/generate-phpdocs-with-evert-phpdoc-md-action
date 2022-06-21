@@ -21,20 +21,18 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Setting env variables...
+    - name: Setting initial data...
       run: |
-        GENERATOR_DOCS_PATH=$(php ${{ github.action_path }}/bin/realpath.php "${{ inputs.output_path }}")
+        mkdir -p "${{ inputs.output_path }}" || true
+        
+        GENERATOR_DOCS_PATH=$(php ${{ github.action_path }}/bin/realpath.php "${{ inputs.output_path }}")        
         GENERATOR_TMP_FILES_PATH="${{ runner.temp }}/phpdocs-${{ github.sha }}-${{ github.run_id }}-${{ github.github.run_attempt }}"
         
         echo "GENERATOR_TMP_FILES_PATH=$GENERATOR_TMP_FILES_PATH" >> $GITHUB_ENV
         echo "GENERATOR_DOCS_PATH=$GENERATOR_DOCS_PATH" >> $GITHUB_ENV
-      shell: bash        
-  
-    - name: Creating needed folders...
-      run: |
+        
         rm -rf ${{ env.GENERATOR_TMP_FILES_PATH }} || true
         mkdir -p ${{ env.GENERATOR_TMP_FILES_PATH }}
-        mkdir -p "${{ inputs.output_path }}" || true
       shell: bash
 
     - name: Running phpDocumentator...
