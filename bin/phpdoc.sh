@@ -3,7 +3,7 @@
 IGNORED_FILES=$1
 PHPDOC_TAG=$2
 
-GENERATOR_DOCKER_APP_ARGS="--target=/result --directory=/data --cache-folder=/tmp -v --template=xml --ansi --no-interaction"
+GENERATOR_DOCKER_APP_ARGS="--target=/result --directory=/data --cache-folder=/tmp -v --template=xml --ansi --no-interaction --ignore=\"vendor/**\""
 if [ "$IGNORED_FILES" != "" ]; then
   while read -r line
   do

@@ -23,13 +23,18 @@ runs:
   steps:
     - name: Setting env variables...
       run: |
-        echo "GENERATOR_TMP_FILES_PATH=${{ runner.temp }}/phpdocs-${{ github.sha }}-${{ github.run_id }}-${{ github.github.run_attempt }}" >> $GITHUB_ENV
+        GENERATOR_DOCS_PATH=$(php ${{ github.action_path }}/bin/realpath.php "${{ inputs.output_path }}")
+        GENERATOR_TMP_FILES_PATH="${{ runner.temp }}/phpdocs-${{ github.sha }}-${{ github.run_id }}-${{ github.github.run_attempt }}"
+        
+        echo "GENERATOR_TMP_FILES_PATH=$GENERATOR_TMP_FILES_PATH" >> $GITHUB_ENV
+        echo "GENERATOR_DOCS_PATH=$GENERATOR_DOCS_PATH" >> $GITHUB_ENV
       shell: bash        
   
-    - name: Creating tmp folders...
+    - name: Creating needed folders...
       run: |
         rm -rf ${{ env.GENERATOR_TMP_FILES_PATH }} || true
         mkdir -p ${{ env.GENERATOR_TMP_FILES_PATH }}
+        mkdir -p "${{ inputs.output_path }}" || true
       shell: bash
 
     - name: Running phpDocumentator...
@@ -41,7 +46,7 @@ runs:
       shell: bash
 
     - name: Generating documentation...
-      run: composer global exec phpdocmd ${{ env.GENERATOR_TMP_FILES_PATH }}/structure.xml ${{ inputs.output_path }}
+      run: composer global exec phpdocmd "$GENERATOR_TMP_FILES_PATH/structure.xml" "$GENERATOR_DOCS_PATH"
       shell: bash
 
     - name: Uninstalling evert/phpdoc-md...
@@ -50,5 +55,5 @@ runs:
 
     - name: Deleting tmp data...
       run: |
-        rm -rf ${{ env.GENERATOR_TMP_FILES_PATH }} || true
+        rm -rf "$GENERATOR_TMP_FILES_PATH" || true
       shell: bash
