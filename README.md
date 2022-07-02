@@ -26,7 +26,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@master
         with:
-          php-version: 8.1
+          php-version: 7.4
           extensions: curl, gd, pdo_mysql, json, mbstring, pcre, session
           ini-values: post_max_size=256M
           coverage: none
