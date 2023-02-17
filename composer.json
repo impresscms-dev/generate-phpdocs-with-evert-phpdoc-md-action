@@ -1,0 +1,15 @@
+{
+    "name": "impresscms-dev/generate-phpdocs-with-evert-phpdoc-md-action",
+    "description": "Libraries needed for same name GitHub action",
+    "type": "metapackage",
+    "require": {
+        "evert/phpdoc-md": "^0.2.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Raimondas Rimkevičius (aka MekDrop)",
+            "email": "github@mekdrop.name"
+        }
+    ]
+}

@@ -21,37 +21,33 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Setting initial data...
-      run: |
-        mkdir -p "${{ inputs.output_path }}" || true
-        
-        GENERATOR_DOCS_PATH=$(php ${{ github.action_path }}/bin/realpath.php "${{ inputs.output_path }}")        
-        GENERATOR_TMP_FILES_PATH="${{ runner.temp }}/phpdocs-${{ github.sha }}-${{ github.run_id }}-${{ github.github.run_attempt }}"
-        
-        echo "GENERATOR_TMP_FILES_PATH=$GENERATOR_TMP_FILES_PATH" >> $GITHUB_ENV
-        echo "GENERATOR_DOCS_PATH=$GENERATOR_DOCS_PATH" >> $GITHUB_ENV
-        
-        rm -rf "$GENERATOR_TMP_FILES_PATH" || true
-        mkdir -p "$GENERATOR_TMP_FILES_PATH"
+    - name: Setting env variables...
+      env:
+        GENERATOR_TMP_FILES_PATH: "${{ runner.temp }}/phpdocs-${{ github.sha }}-${{ github.run_id }}-${{ github.github.run_attempt }}"
+        GENERATOR_DOCS_PATH: ${{ inputs.output_path }}
+      run: $ACTION_BIN_PATH/generate-env.sh "$GENERATOR_TMP_FILES_PATH" "$GENERATOR_DOCS_PATH" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Creating required paths...
+      run: $ACTION_BIN_PATH/create-paths.sh
       shell: bash
 
     - name: Running phpDocumentator...
-      run: bash ${{ github.action_path }}/bin/phpdoc.sh "${{ inputs.ignored_files }}" "${{ inputs.phpdocumentor_version }}"
+      run: $ACTION_BIN_PATH/phpdoc.sh "${{ inputs.ignored_files }}" "${{ inputs.phpdocumentor_version }}"
       shell: bash
 
     - name: Installing evert/phpdoc-md...
-      run: composer global require 'evert/phpdoc-md=~0.2.0'
+      run: $ACTION_BIN_PATH/add-composer-packages.sh
       shell: bash
 
     - name: Generating documentation...
-      run: composer global exec phpdocmd "$GENERATOR_TMP_FILES_PATH/structure.xml" "$GENERATOR_DOCS_PATH"
+      run: $ACTION_BIN_PATH/generate-docs.sh
       shell: bash
 
     - name: Uninstalling evert/phpdoc-md...
-      run: composer global remove evert/phpdoc-md
+      run: $ACTION_BIN_PATH/remove-composer-dependencies.sh
       shell: bash
 
     - name: Deleting tmp data...
-      run: |
-        rm -rf "$GENERATOR_TMP_FILES_PATH" || true
+      run: $ACTION_BIN_PATH/remove-tmp-data.sh
       shell: bash
