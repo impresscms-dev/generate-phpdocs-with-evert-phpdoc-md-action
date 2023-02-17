@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+GENERATOR_TMP_FILES_PATH=$1
+GENERATOR_DOCS_PATH=$2
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+cat <<EOF
+GENERATOR_TMP_FILES_PATH=$("$SCRIPT_DIR/realpath.php" "$GENERATOR_TMP_FILES_PATH")
+GENERATOR_DOCS_PATH=$("$SCRIPT_DIR/realpath.php" "$GENERATOR_DOCS_PATH")
+ACTION_BIN_PATH=$SCRIPT_DIR
+EOF
