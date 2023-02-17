@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Install PHP
-        uses: shivammathur/setup-php@master
+        uses: shivammathur/setup-php@v2.2
         with:
           php-version: 7.4
           extensions: curl, gd, pdo_mysql, json, mbstring, pcre, session
@@ -36,7 +36,7 @@ jobs:
         run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader       
           
       - name: Generating documentation...
-        uses: impresscms-dev/generate-phpdocs-with-evert-phpdoc-md-action@v0.1
+        uses: impresscms-dev/generate-phpdocs-with-evert-phpdoc-md-action@v1.0.0
         with:
           output_path: ./docs/
           ignored_files: |
