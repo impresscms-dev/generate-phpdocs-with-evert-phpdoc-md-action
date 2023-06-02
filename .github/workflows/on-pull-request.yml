@@ -42,9 +42,7 @@ jobs:
   dependabot:
     needs:
       - test
-    permissions:
-      pull-requests: write
-      contents: write
+    permissions: write-all
     runs-on: ubuntu-latest
     # Checking the actor will prevent your Action run failing on non-Dependabot
     # PRs but also ensures that it only does work for Dependabot PRs.
