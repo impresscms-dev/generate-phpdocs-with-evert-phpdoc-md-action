@@ -76,6 +76,7 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
   const runId = randomUUID();
 
   const container = new GenericContainer(actionImage)
+    .withAutoRemove(false)
     .withBindMounts([
       {
         source: workspacePath,
@@ -97,7 +98,8 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
   }
 
   try {
-    await container.start();
+    const startedContainer = await container.start();
+    await startedContainer.stop();
   } catch (error) {
     const containerId = /Container failed to start for ([a-f0-9]+)/i.exec(String(error?.message ?? ""))?.[1];
     if (!containerId) {
