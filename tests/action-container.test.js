@@ -14,6 +14,8 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const fixtureProjectPath = path.join(__dirname, "fixtures", "example-project");
 const dockerExecutable = process.env.DOCKER_BIN || "docker";
+const hostUid = typeof process.getuid === "function" ? process.getuid() : null;
+const hostGid = typeof process.getgid === "function" ? process.getgid() : null;
 
 async function buildActionImage(phpVersion) {
   const imageTag = `local/phpdocs-action-test:${randomUUID()}`;
@@ -48,7 +50,7 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
   const docsOutputPath = path.join(workspacePath, "docs");
   const runId = randomUUID();
 
-  await new GenericContainer(actionImage)
+  const container = new GenericContainer(actionImage)
     .withBindMounts([
       {
         source: workspacePath,
@@ -63,8 +65,13 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
     })
     .withWorkingDir("/github/workspace")
     .withWaitStrategy(Wait.forOneShotStartup())
-    .withCommand(["docs", ignoredFiles, phpDocumentorVersion])
-    .start();
+    .withCommand(["docs", ignoredFiles, phpDocumentorVersion]);
+
+  if (hostUid !== null && hostGid !== null) {
+    container.withUser(`${hostUid}:${hostGid}`);
+  }
+
+  await container.start();
 
   return {
     docsOutputPath,
