@@ -10,7 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
+      max-parallel: 3
       matrix:
         php_version:
           - '5.4'
@@ -24,10 +25,20 @@ jobs:
       - name: Checkouting code...
         uses: actions/checkout@v5
 
+      - name: Read Node.js version from package.json
+        id: node-version
+        run: |
+          NODE_VERSION=$(jq -r '.engines.node // empty' package.json)
+          if [[ -z "$NODE_VERSION" || "$NODE_VERSION" == "null" ]]; then
+            echo "package.json engines.node is required" >&2
+            exit 1
+          fi
+          echo "version=$NODE_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ steps.node-version.outputs.version }}
 
       - name: Enable legacy Docker schema v1 pulls for old PHP tags
         run: |
