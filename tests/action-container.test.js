@@ -19,10 +19,10 @@ if (process.platform === "win32" && existsSync(path.join(dockerDesktopPath, "doc
   process.env.PATH = `${dockerDesktopPath};${process.env.PATH}`;
 }
 
-async function buildActionImage(phpBaseImage) {
+async function buildActionImage(phpImage) {
   return GenericContainer.fromDockerfile(repoRoot)
     .withBuildArgs({
-      PHP_BASE_IMAGE: phpBaseImage
+      PHP_IMAGE: phpImage
     })
     .build();
 }
@@ -61,18 +61,18 @@ async function runAction(actionContainer, ignoredFiles, phpDocumentorVersion) {
 
 const testMatrix = [
   {
-    phpBaseImage: "php:5.5.38-cli",
+    phpImage: "php:5.5.38-cli",
     phpDocumentorVersion: "v2.8.5"
   },
   {
-    phpBaseImage: "php:7.4-cli",
+    phpImage: "php:7.4-cli",
     phpDocumentorVersion: "v2.8.5"
   }
 ];
 
 for (const scenario of testMatrix) {
-  test(`boots container and generates markdown (${scenario.phpBaseImage})`, async () => {
-    const actionContainer = await buildActionImage(scenario.phpBaseImage);
+  test(`boots container and generates markdown (${scenario.phpImage})`, async () => {
+    const actionContainer = await buildActionImage(scenario.phpImage);
     const { docsOutputPath, workspacePath } = await runAction(actionContainer, "", scenario.phpDocumentorVersion);
 
     try {

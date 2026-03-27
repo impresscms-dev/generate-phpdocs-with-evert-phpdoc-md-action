@@ -50,7 +50,7 @@ This action supports such arguments (used in `with` keyword):
 
 - Docker build clones `git@github.com:evert/phpdoc-md.git` directly and falls back to HTTPS clone when SSH credentials are not available.
 - phpDocumentor release artifacts are downloaded during action runtime and are not stored in this repository.
-- Dockerfile supports selecting the PHP base image at build time: `docker build --build-arg PHP_BASE_IMAGE=php:7.4-cli .`
+- Dockerfile supports selecting the PHP base image by explicit image reference: `docker build --build-arg PHP_IMAGE=php:7.4-cli .`
 - Tests are JavaScript integration tests based on [testcontainers-node](https://github.com/testcontainers/testcontainers-node).
 
 ## How to contribute? 
