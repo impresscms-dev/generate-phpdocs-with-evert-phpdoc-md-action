@@ -10,6 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         php_version:
           - '5.3'
@@ -28,6 +29,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Enable legacy Docker schema v1 pulls for old PHP tags
+        run: |
+          sudo mkdir -p /etc/systemd/system/docker.service.d
+          cat <<'EOF' | sudo tee /etc/systemd/system/docker.service.d/10-enable-schema1.conf
+          [Service]
+          Environment=CONTAINERD_ENABLE_DEPRECATED_PULL_SCHEMA_1_IMAGE=1
+          EOF
+          sudo systemctl daemon-reload
+          sudo systemctl restart docker
+          docker version
 
       - name: Install dependencies
         run: npm ci
