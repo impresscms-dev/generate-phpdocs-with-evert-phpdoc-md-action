@@ -67,7 +67,7 @@ async function buildActionImage(phpVersion) {
   return imageTag;
 }
 
-async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
+async function runAction(actionImage, phpVersion, ignoredFiles, phpDocumentorVersion) {
   const workspacePath = await mkdtemp(path.join(os.tmpdir(), "phpdoc-action-workspace-"));
 
   await cp(fixtureProjectPath, workspacePath, { recursive: true });
@@ -101,6 +101,7 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
     startedContainer = await container.start();
     const execResult = await startedContainer.exec([
       "/usr/local/bin/entrypoint.sh",
+      phpVersion,
       "docs",
       ignoredFiles,
       phpDocumentorVersion
@@ -162,7 +163,7 @@ const phpDocumentorVersion = process.env.PHPDOC_VERSION || "v2.8.5";
 
 test(`boots container and generates markdown (php:${phpVersion}-cli)`, async () => {
   const actionImage = await buildActionImage(phpVersion);
-  const { docsOutputPath, workspacePath } = await runAction(actionImage, "", phpDocumentorVersion);
+  const { docsOutputPath, workspacePath } = await runAction(actionImage, phpVersion, "", phpDocumentorVersion);
 
   try {
     const indexStat = await stat(path.join(docsOutputPath, "ApiIndex.md"));

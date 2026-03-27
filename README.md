@@ -26,6 +26,7 @@ jobs:
       - name: Generating documentation...
         uses: impresscms-dev/generate-phpdocs-with-evert-phpdoc-md-action@v1.0.0
         with:
+          php_version: '7.4'
           output_path: ./docs/
           ignored_files: |
             test/
@@ -42,6 +43,7 @@ jobs:
 This action supports such arguments (used in `with` keyword):
 | Argument    | Required | Default value        | Description                       |
 |-------------|----------|----------------------|-----------------------------------|
+| php_version | No | 7.4 | PHP version to run (accepted range: `5.4` to `7.4`, inclusive) |
 | ignored_files | No      |                      | Defines files that can be ignored (supports glob rules; each line means one rule) |
 | phpdocumentor_version | No | v2.8.5 | What [phpDocumentor](https://www.phpdoc.org) version to use (latest or release tag like `v2.8.5`) |
 | output_path | Yes | | Path where to write generated documentation |
@@ -51,6 +53,7 @@ This action supports such arguments (used in `with` keyword):
 - Docker build clones `git@github.com:evert/phpdoc-md.git` directly and falls back to HTTPS clone when SSH credentials are not available.
 - phpDocumentor release artifacts are downloaded during action runtime and are not stored in this repository.
 - Dockerfile supports selecting PHP by version: `docker build --build-arg PHP_VERSION=7.4 .`
+- `php_version` input must match the container runtime version (this image version is controlled by `PHP_VERSION` build arg).
 - Tests are JavaScript integration tests based on [testcontainers-node](https://github.com/testcontainers/testcontainers-node).
 
 ## How to contribute? 

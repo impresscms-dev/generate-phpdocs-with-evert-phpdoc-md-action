@@ -2,9 +2,20 @@
 
 set -euo pipefail
 
-OUTPUT_PATH=${1:-}
-IGNORED_FILES=${2:-}
-PHPDOC_VERSION=${3:-v2.8.5}
+REQUESTED_PHP_VERSION=${1:-7.4}
+OUTPUT_PATH=${2:-}
+IGNORED_FILES=${3:-}
+PHPDOC_VERSION=${4:-v2.8.5}
+
+if ! php -r '$version = isset($argv[1]) ? $argv[1] : ""; if (!preg_match("/^(5\\.[4-6]|7\\.[0-4])$/", $version)) { fwrite(STDERR, "Input '\''php_version'\'' must be between 5.4 and 7.4 (inclusive).\n"); exit(1); }' "$REQUESTED_PHP_VERSION"; then
+  exit 1
+fi
+
+RUNTIME_PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
+if [[ "$REQUESTED_PHP_VERSION" != "$RUNTIME_PHP_VERSION" ]]; then
+  echo "Input 'php_version' is '$REQUESTED_PHP_VERSION' but action container uses PHP '$RUNTIME_PHP_VERSION'. Build the action image with matching PHP_VERSION." >&2
+  exit 1
+fi
 
 if [[ -z "$OUTPUT_PATH" ]]; then
   echo "Input 'output_path' is required." >&2

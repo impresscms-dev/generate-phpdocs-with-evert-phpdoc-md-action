@@ -6,6 +6,10 @@ branding:
   color: red
 
 inputs:
+  php_version:
+    description: "PHP version to run (must be between 5.4 and 7.4 inclusive)"
+    required: false
+    default: '7.4'
   ignored_files:
     description: "Defines files that can be ignored (supports glob rules; each line means one rule)"
     required: false
@@ -22,6 +26,7 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
+    - ${{ inputs.php_version }}
     - ${{ inputs.output_path }}
     - ${{ inputs.ignored_files }}
     - ${{ inputs.phpdocumentor_version }}
