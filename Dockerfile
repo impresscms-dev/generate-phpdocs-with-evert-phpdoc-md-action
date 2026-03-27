@@ -14,10 +14,6 @@ RUN /usr/local/bin/setup-phpdocumentor-cache.sh /opt/phpdocumentor-cache "$PHPDO
 
 FROM php:${PHP_VERSION}-cli
 
-COPY --chmod=0755 bin/install-runtime-zlib.sh /usr/local/bin/install-runtime-zlib.sh
-RUN /usr/local/bin/install-runtime-zlib.sh \
-    && rm -f /usr/local/bin/install-runtime-zlib.sh
-
 COPY --from=phpdocmd-builder /opt/phpdoc-md /opt/phpdoc-md
 COPY --from=phpdocmd-builder /opt/phpdocumentor-cache /opt/phpdocumentor-cache
 COPY --chmod=0755 bin/entrypoint.sh /usr/local/bin/entrypoint.sh
