@@ -72,35 +72,25 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
   };
 }
 
-const testMatrix = [
-  {
-    phpVersion: "5.5.38",
-    phpDocumentorVersion: "v2.8.5"
-  },
-  {
-    phpVersion: "7.4",
-    phpDocumentorVersion: "v2.8.5"
+const phpVersion = process.env.PHP_VERSION || "7.4";
+const phpDocumentorVersion = process.env.PHPDOC_VERSION || "v2.8.5";
+
+test(`boots container and generates markdown (php:${phpVersion}-cli)`, async () => {
+  const actionImage = await buildActionImage(phpVersion);
+  const { docsOutputPath, workspacePath } = await runAction(actionImage, "", phpDocumentorVersion);
+
+  try {
+    const indexStat = await stat(path.join(docsOutputPath, "ApiIndex.md"));
+    assert.equal(indexStat.isFile(), true);
+
+    const docsFiles = await readdir(docsOutputPath);
+    const classDocFiles = docsFiles.filter((fileName) => fileName.endsWith(".md") && fileName !== "ApiIndex.md");
+    assert.equal(classDocFiles.length > 0, true);
+
+    const indexContents = await readFile(path.join(docsOutputPath, "ApiIndex.md"), "utf8");
+    assert.match(indexContents, /ExampleClass/);
+    assert.match(indexContents, /IgnoredClass/);
+  } finally {
+    await rm(workspacePath, { force: true, recursive: true });
   }
-];
-
-for (const scenario of testMatrix) {
-  test(`boots container and generates markdown (php:${scenario.phpVersion}-cli)`, async () => {
-    const actionImage = await buildActionImage(scenario.phpVersion);
-    const { docsOutputPath, workspacePath } = await runAction(actionImage, "", scenario.phpDocumentorVersion);
-
-    try {
-      const indexStat = await stat(path.join(docsOutputPath, "ApiIndex.md"));
-      assert.equal(indexStat.isFile(), true);
-
-      const docsFiles = await readdir(docsOutputPath);
-      const classDocFiles = docsFiles.filter((fileName) => fileName.endsWith(".md") && fileName !== "ApiIndex.md");
-      assert.equal(classDocFiles.length > 0, true);
-
-      const indexContents = await readFile(path.join(docsOutputPath, "ApiIndex.md"), "utf8");
-      assert.match(indexContents, /ExampleClass/);
-      assert.match(indexContents, /IgnoredClass/);
-    } finally {
-      await rm(workspacePath, { force: true, recursive: true });
-    }
-  });
-}
+});
