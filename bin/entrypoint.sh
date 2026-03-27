@@ -30,6 +30,7 @@ PHPDOC_PHAR_PATH="$TMP_ROOT/phpDocumentor.phar"
 PHPDOC_TAR_GZ_PATH="$TMP_ROOT/phpDocumentor.tgz"
 PHPDOC_EXTRACT_PATH="$TMP_ROOT/phpDocumentor"
 PHPDOC_MD_PATH=/opt/phpdoc-md
+PHPDOC_CACHE_PATH=/opt/phpdocumentor-cache
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -59,8 +60,18 @@ if [[ "$PHPDOC_VERSION" == "latest" ]]; then
   PHPDOC_COMMAND=(php "$PHPDOC_PHAR_PATH" run)
 else
   PHPDOC_VERSION_NO_PREFIX=${PHPDOC_VERSION#v}
+  CACHED_PHPDOC_TAR_GZ_PATH="$PHPDOC_CACHE_PATH/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.tgz"
   PHPDOC_TAR_GZ_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.tgz"
-  if download_file "$PHPDOC_TAR_GZ_URL" "$PHPDOC_TAR_GZ_PATH"; then
+
+  if [[ -f "$CACHED_PHPDOC_TAR_GZ_PATH" ]]; then
+    cp "$CACHED_PHPDOC_TAR_GZ_PATH" "$PHPDOC_TAR_GZ_PATH"
+  elif ! download_file "$PHPDOC_TAR_GZ_URL" "$PHPDOC_TAR_GZ_PATH"; then
+    PHPDOC_PHAR_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor.phar"
+    download_file "$PHPDOC_PHAR_URL" "$PHPDOC_PHAR_PATH"
+    PHPDOC_COMMAND=(php "$PHPDOC_PHAR_PATH" run)
+  fi
+
+  if [[ -z "${PHPDOC_COMMAND[*]}" ]]; then
     extract_tgz "$PHPDOC_TAR_GZ_PATH" "$PHPDOC_EXTRACT_PATH"
     PHPDOC_BIN_PATH="$PHPDOC_EXTRACT_PATH/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}/bin/phpdoc"
     if [[ ! -f "$PHPDOC_BIN_PATH" ]]; then
@@ -68,10 +79,6 @@ else
       exit 1
     fi
     PHPDOC_COMMAND=(php "$PHPDOC_BIN_PATH")
-  else
-    PHPDOC_PHAR_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor.phar"
-    download_file "$PHPDOC_PHAR_URL" "$PHPDOC_PHAR_PATH"
-    PHPDOC_COMMAND=(php "$PHPDOC_PHAR_PATH" run)
   fi
 fi
 
