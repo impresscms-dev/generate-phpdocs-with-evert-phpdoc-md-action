@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Checkouting code...
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Read Node.js version from package.json
         id: node-version
