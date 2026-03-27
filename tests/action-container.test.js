@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { cp, mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -14,20 +15,39 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const fixtureProjectPath = path.join(__dirname, "fixtures", "example-project");
 const dockerDesktopPath = "C:\\Program Files\\Docker\\Docker\\resources\\bin";
+const dockerExecutable =
+  process.platform === "win32" && existsSync(path.join(dockerDesktopPath, "docker.exe"))
+    ? path.join(dockerDesktopPath, "docker.exe")
+    : "docker";
 
 if (process.platform === "win32" && existsSync(path.join(dockerDesktopPath, "docker.exe"))) {
   process.env.PATH = `${dockerDesktopPath};${process.env.PATH}`;
 }
 
 async function buildActionImage(phpVersion) {
-  return GenericContainer.fromDockerfile(repoRoot)
-    .withBuildArgs({
-      PHP_VERSION: phpVersion
-    })
-    .build();
+  const imageTag = `local/phpdocs-action-test:${randomUUID()}`;
+  const args = ["build", "--build-arg", `PHP_VERSION=${phpVersion}`, "-t", imageTag, "."];
+
+  await new Promise((resolve, reject) => {
+    const childProcess = spawn(dockerExecutable, args, {
+      cwd: repoRoot,
+      stdio: "inherit"
+    });
+
+    childProcess.on("error", reject);
+    childProcess.on("exit", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`docker build failed for PHP_VERSION=${phpVersion}`));
+      }
+    });
+  });
+
+  return imageTag;
 }
 
-async function runAction(actionContainer, ignoredFiles, phpDocumentorVersion) {
+async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
   const workspacePath = await mkdtemp(path.join(os.tmpdir(), "phpdoc-action-workspace-"));
 
   await cp(fixtureProjectPath, workspacePath, { recursive: true });
@@ -35,7 +55,7 @@ async function runAction(actionContainer, ignoredFiles, phpDocumentorVersion) {
   const docsOutputPath = path.join(workspacePath, "docs");
   const runId = randomUUID();
 
-  const container = await actionContainer
+  await new GenericContainer(actionImage)
     .withBindMounts([
       {
         source: workspacePath,
@@ -72,8 +92,8 @@ const testMatrix = [
 
 for (const scenario of testMatrix) {
   test(`boots container and generates markdown (php:${scenario.phpVersion}-cli)`, async () => {
-    const actionContainer = await buildActionImage(scenario.phpVersion);
-    const { docsOutputPath, workspacePath } = await runAction(actionContainer, "", scenario.phpDocumentorVersion);
+    const actionImage = await buildActionImage(scenario.phpVersion);
+    const { docsOutputPath, workspacePath } = await runAction(actionImage, "", scenario.phpDocumentorVersion);
 
     try {
       const indexStat = await stat(path.join(docsOutputPath, "ApiIndex.md"));
