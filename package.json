@@ -9,6 +9,6 @@
     "node": "22"
   },
   "devDependencies": {
-    "testcontainers": "^10.20.0"
+    "testcontainers": "^11.13.0"
   }
 }

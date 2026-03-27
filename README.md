@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Generating documentation...
-        uses: impresscms-dev/generate-phpdocs-with-evert-phpdoc-md-action@v1.0.0
+        uses: impresscms-dev/generate-phpdocs-with-evert-phpdoc-md-action@v2
         with:
           php_version: '7.4'
           output_path: ./docs/
