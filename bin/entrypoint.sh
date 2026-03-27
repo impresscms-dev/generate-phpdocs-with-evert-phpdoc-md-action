@@ -64,11 +64,15 @@ else
   PHPDOC_VERSION_NO_PREFIX=${PHPDOC_VERSION#v}
   CACHED_PHPDOC_TAR_GZ_PATH="$PHPDOC_CACHE_PATH/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.tgz"
   CACHED_PHPDOC_PHAR_PATH="$PHPDOC_CACHE_PATH/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.phar"
+  CACHED_PHPDOC_BIN_PATH="$PHPDOC_CACHE_PATH/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}/bin/phpdoc"
   PHPDOC_TAR_GZ_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.tgz"
   PHPDOC_PHAR_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor.phar"
 
   if ! php -r 'exit(extension_loaded("zlib") ? 0 : 1);'; then
-    if [[ -f "$CACHED_PHPDOC_PHAR_PATH" ]]; then
+    if [[ -f "$CACHED_PHPDOC_BIN_PATH" ]]; then
+      PHPDOC_COMMAND=(php "$CACHED_PHPDOC_BIN_PATH")
+      PHPDOC_COMMAND_SET=1
+    elif [[ -f "$CACHED_PHPDOC_PHAR_PATH" ]]; then
       cp "$CACHED_PHPDOC_PHAR_PATH" "$PHPDOC_PHAR_PATH"
       PHPDOC_COMMAND=(php "$PHPDOC_PHAR_PATH" run)
       PHPDOC_COMMAND_SET=1
