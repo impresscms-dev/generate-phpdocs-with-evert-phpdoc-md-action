@@ -7,7 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { GenericContainer, Wait } from "testcontainers";
+import { GenericContainer } from "testcontainers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,7 +76,8 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
   const runId = randomUUID();
 
   const container = new GenericContainer(actionImage)
-    .withAutoRemove(false)
+    .withEntrypoint(["/bin/sh", "-lc"])
+    .withCommand(["while true; do sleep 3600; done"])
     .withBindMounts([
       {
         source: workspacePath,
@@ -89,31 +90,51 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
       GITHUB_RUN_ID: runId,
       GITHUB_SHA: runId
     })
-    .withWorkingDir("/github/workspace")
-    .withWaitStrategy(Wait.forOneShotStartup())
-    .withCommand(["docs", ignoredFiles, phpDocumentorVersion]);
+    .withWorkingDir("/github/workspace");
 
   if (hostUid !== null && hostGid !== null) {
     container.withUser(`${hostUid}:${hostGid}`);
   }
 
+  let startedContainer;
   try {
-    const startedContainer = await container.start();
-    await startedContainer.stop();
+    startedContainer = await container.start();
+    const execResult = await startedContainer.exec([
+      "/usr/local/bin/entrypoint.sh",
+      "docs",
+      ignoredFiles,
+      phpDocumentorVersion
+    ]);
+
+    if (execResult.exitCode !== 0) {
+      const stderr = execResult.output
+        .filter((line) => line.type === "STDERR")
+        .map((line) => line.content)
+        .join("\n");
+      const stdout = execResult.output
+        .filter((line) => line.type === "STDOUT")
+        .map((line) => line.content)
+        .join("\n");
+
+      throw new Error(
+        `Action execution failed with exit code ${execResult.exitCode}\nSTDOUT:\n${stdout}\nSTDERR:\n${stderr}`
+      );
+    }
   } catch (error) {
-    const containerId = /Container failed to start for ([a-f0-9]+)/i.exec(String(error?.message ?? ""))?.[1];
-    if (!containerId) {
-      throw error;
+    if (startedContainer) {
+      const containerId = startedContainer.getId();
+      try {
+        const containerLogs = await runDockerCommand(["logs", containerId]);
+        error = new Error(`${error.message}\nContainer logs:\n${containerLogs}`);
+      } catch {
+        // Fall back to the original error if container logs cannot be read.
+      }
     }
-
-    let containerLogs = "";
-    try {
-      containerLogs = await runDockerCommand(["logs", containerId]);
-    } catch (logsError) {
-      containerLogs = `Unable to read container logs: ${logsError.message}`;
+    throw error;
+  } finally {
+    if (startedContainer) {
+      await startedContainer.stop().catch(() => {});
     }
-
-    throw new Error(`Container failed to start for ${containerId}\n${containerLogs}`);
   }
 
   return {
