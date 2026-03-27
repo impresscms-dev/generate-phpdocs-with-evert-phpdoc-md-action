@@ -16,3 +16,11 @@ updates:
     open-pull-requests-limit: 20
     labels:
       - dependencies
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 20
+    labels:
+      - dependencies
