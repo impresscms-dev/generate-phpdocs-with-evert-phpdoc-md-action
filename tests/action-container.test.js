@@ -17,6 +17,31 @@ const dockerExecutable = process.env.DOCKER_BIN || "docker";
 const hostUid = typeof process.getuid === "function" ? process.getuid() : null;
 const hostGid = typeof process.getgid === "function" ? process.getgid() : null;
 
+async function runDockerCommand(args) {
+  return await new Promise((resolve, reject) => {
+    let output = "";
+    const childProcess = spawn(dockerExecutable, args, {
+      cwd: repoRoot,
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+
+    childProcess.stdout.on("data", (chunk) => {
+      output += chunk.toString();
+    });
+    childProcess.stderr.on("data", (chunk) => {
+      output += chunk.toString();
+    });
+    childProcess.on("error", reject);
+    childProcess.on("exit", (code) => {
+      if (code === 0) {
+        resolve(output.trim());
+      } else {
+        reject(new Error(output.trim() || `docker ${args.join(" ")} failed with exit code ${code ?? "unknown"}`));
+      }
+    });
+  });
+}
+
 async function buildActionImage(phpVersion) {
   const imageTag = `local/phpdocs-action-test:${randomUUID()}`;
   const args = ["build", "--build-arg", `PHP_VERSION=${phpVersion}`, "-t", imageTag, "."];
@@ -71,7 +96,23 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
     container.withUser(`${hostUid}:${hostGid}`);
   }
 
-  await container.start();
+  try {
+    await container.start();
+  } catch (error) {
+    const containerId = /Container failed to start for ([a-f0-9]+)/i.exec(String(error?.message ?? ""))?.[1];
+    if (!containerId) {
+      throw error;
+    }
+
+    let containerLogs = "";
+    try {
+      containerLogs = await runDockerCommand(["logs", containerId]);
+    } catch (logsError) {
+      containerLogs = `Unable to read container logs: ${logsError.message}`;
+    }
+
+    throw new Error(`Container failed to start for ${containerId}\n${containerLogs}`);
+  }
 
   return {
     docsOutputPath,
