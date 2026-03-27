@@ -63,12 +63,25 @@ if [[ "$PHPDOC_VERSION" == "latest" ]]; then
 else
   PHPDOC_VERSION_NO_PREFIX=${PHPDOC_VERSION#v}
   CACHED_PHPDOC_TAR_GZ_PATH="$PHPDOC_CACHE_PATH/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.tgz"
+  CACHED_PHPDOC_PHAR_PATH="$PHPDOC_CACHE_PATH/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.phar"
   PHPDOC_TAR_GZ_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor-${PHPDOC_VERSION_NO_PREFIX}.tgz"
+  PHPDOC_PHAR_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor.phar"
 
-  if [[ -f "$CACHED_PHPDOC_TAR_GZ_PATH" ]]; then
+  if ! php -r 'exit(extension_loaded("zlib") ? 0 : 1);'; then
+    if [[ -f "$CACHED_PHPDOC_PHAR_PATH" ]]; then
+      cp "$CACHED_PHPDOC_PHAR_PATH" "$PHPDOC_PHAR_PATH"
+      PHPDOC_COMMAND=(php "$PHPDOC_PHAR_PATH" run)
+      PHPDOC_COMMAND_SET=1
+    else
+      download_file "$PHPDOC_PHAR_URL" "$PHPDOC_PHAR_PATH"
+      PHPDOC_COMMAND=(php "$PHPDOC_PHAR_PATH" run)
+      PHPDOC_COMMAND_SET=1
+    fi
+  fi
+
+  if [[ "$PHPDOC_COMMAND_SET" -eq 0 ]] && [[ -f "$CACHED_PHPDOC_TAR_GZ_PATH" ]]; then
     cp "$CACHED_PHPDOC_TAR_GZ_PATH" "$PHPDOC_TAR_GZ_PATH"
-  elif ! download_file "$PHPDOC_TAR_GZ_URL" "$PHPDOC_TAR_GZ_PATH"; then
-    PHPDOC_PHAR_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/v${PHPDOC_VERSION_NO_PREFIX}/phpDocumentor.phar"
+  elif [[ "$PHPDOC_COMMAND_SET" -eq 0 ]] && ! download_file "$PHPDOC_TAR_GZ_URL" "$PHPDOC_TAR_GZ_PATH"; then
     download_file "$PHPDOC_PHAR_URL" "$PHPDOC_PHAR_PATH"
     PHPDOC_COMMAND=(php "$PHPDOC_PHAR_PATH" run)
     PHPDOC_COMMAND_SET=1
