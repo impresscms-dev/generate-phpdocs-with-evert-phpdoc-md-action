@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { cp, mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -14,15 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const fixtureProjectPath = path.join(__dirname, "fixtures", "example-project");
-const dockerDesktopPath = "C:\\Program Files\\Docker\\Docker\\resources\\bin";
-const dockerExecutable =
-  process.platform === "win32" && existsSync(path.join(dockerDesktopPath, "docker.exe"))
-    ? path.join(dockerDesktopPath, "docker.exe")
-    : "docker";
-
-if (process.platform === "win32" && existsSync(path.join(dockerDesktopPath, "docker.exe"))) {
-  process.env.PATH = `${dockerDesktopPath};${process.env.PATH}`;
-}
+const dockerExecutable = process.env.DOCKER_BIN || "docker";
 
 async function buildActionImage(phpVersion) {
   const imageTag = `local/phpdocs-action-test:${randomUUID()}`;
@@ -34,7 +25,9 @@ async function buildActionImage(phpVersion) {
       stdio: "inherit"
     });
 
-    childProcess.on("error", reject);
+    childProcess.on("error", (error) => {
+      reject(new Error(`Failed to execute '${dockerExecutable}'. Set DOCKER_BIN if Docker is not on PATH. ${error.message}`));
+    });
     childProcess.on("exit", (code) => {
       if (code === 0) {
         resolve();
