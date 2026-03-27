@@ -4,13 +4,9 @@ FROM php:8.3-cli-bookworm AS phpdocmd-builder
 
 COPY --from=composer:2.2 /usr/bin/composer /usr/local/bin/composer
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        git \
-        openssh-client \
-        unzip \
-    && rm -rf /var/lib/apt/lists/*
+COPY bin/install-builder-deps.sh /usr/local/bin/install-builder-deps.sh
+RUN chmod +x /usr/local/bin/install-builder-deps.sh \
+    && /usr/local/bin/install-builder-deps.sh
 
 COPY bin/setup-phpdoc-md.sh /usr/local/bin/setup-phpdoc-md.sh
 RUN chmod +x /usr/local/bin/setup-phpdoc-md.sh \
