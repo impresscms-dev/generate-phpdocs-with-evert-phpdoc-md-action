@@ -1,0 +1,10 @@
+.git
+.github
+.idea
+.zencoder
+node_modules
+tests
+package.json
+package-lock.json
+README.md
+LICENSE

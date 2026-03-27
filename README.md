@@ -5,7 +5,7 @@
 
 GitHub action to generate PHP project documentation in [MarkDown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) format. Based on [evert/phpdoc-md](https://github.com/evert/phpdoc-md) library.
 
-***Warning***: at current moment this action doesn't work with PHP newer than 7.4.
+This action is container-based and runs on official PHP Docker images. It does not require setting up PHP or Composer on the runner.
 
 ## Usage
 
@@ -22,19 +22,7 @@ jobs:
     steps:
       - name: Checkouting project code...
         uses: actions/checkout@v2
-        
-      - name: Install PHP
-        uses: shivammathur/setup-php@v2.2
-        with:
-          php-version: 7.4
-          extensions: curl, gd, pdo_mysql, json, mbstring, pcre, session
-          ini-values: post_max_size=256M
-          coverage: none
-          tools: composer:v2
-          
-      - name: Install Composer dependencies (with dev)
-        run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader       
-          
+
       - name: Generating documentation...
         uses: impresscms-dev/generate-phpdocs-with-evert-phpdoc-md-action@v1.0.0
         with:
@@ -55,8 +43,15 @@ This action supports such arguments (used in `with` keyword):
 | Argument    | Required | Default value        | Description                       |
 |-------------|----------|----------------------|-----------------------------------|
 | ignored_files | No      |                      | Defines files that can be ignored (supports glob rules; each line means one rule) |
-| phpdocumentor_version | No | latest | What [PHP Documentator](https://www.phpdoc.org) version to use? (version = docker image tag) |
+| phpdocumentor_version | No | v2.8.5 | What [phpDocumentor](https://www.phpdoc.org) version to use (latest or release tag like `v2.8.5`) |
 | output_path | Yes | | Path where to write generated documentation |
+
+## Notes
+
+- Docker build clones `git@github.com:evert/phpdoc-md.git` directly and falls back to HTTPS clone when SSH credentials are not available.
+- phpDocumentor release artifacts are downloaded during action runtime and are not stored in this repository.
+- Dockerfile supports selecting the PHP base image at build time: `docker build --build-arg PHP_BASE_IMAGE=php:7.4-cli .`
+- Tests are JavaScript integration tests based on [testcontainers-node](https://github.com/testcontainers/testcontainers-node).
 
 ## How to contribute? 
 

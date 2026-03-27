@@ -11,43 +11,17 @@ inputs:
     required: false
     default: ''
   phpdocumentor_version:
-    description: "What PHP Documentator version to use? (version = docker image tag)"
-    default: latest
+    description: "What phpDocumentor version to use? (latest or release tag like v2.8.5)"
+    default: v2.8.5
     required: false
   output_path:
     description: "Path where to write generated documentation"
     required: true
 
 runs:
-  using: 'composite'
-  steps:
-    - name: Setting env variables...
-      env:
-        GENERATOR_TMP_FILES_PATH: "${{ runner.temp }}/phpdocs-${{ github.sha }}-${{ github.run_id }}-${{ github.github.run_attempt }}"
-        GENERATOR_DOCS_PATH: ${{ inputs.output_path }}
-      run: $ACTION_BIN_PATH/generate-env.sh "$GENERATOR_TMP_FILES_PATH" "$GENERATOR_DOCS_PATH" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Creating required paths...
-      run: $ACTION_BIN_PATH/create-paths.sh
-      shell: bash
-
-    - name: Running phpDocumentator...
-      run: $ACTION_BIN_PATH/phpdoc.sh "${{ inputs.ignored_files }}" "${{ inputs.phpdocumentor_version }}"
-      shell: bash
-
-    - name: Installing evert/phpdoc-md...
-      run: $ACTION_BIN_PATH/add-composer-packages.sh
-      shell: bash
-
-    - name: Generating documentation...
-      run: $ACTION_BIN_PATH/generate-docs.sh
-      shell: bash
-
-    - name: Uninstalling evert/phpdoc-md...
-      run: $ACTION_BIN_PATH/remove-composer-dependencies.sh
-      shell: bash
-
-    - name: Deleting tmp data...
-      run: $ACTION_BIN_PATH/remove-tmp-data.sh
-      shell: bash
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.output_path }}
+    - ${{ inputs.ignored_files }}
+    - ${{ inputs.phpdocumentor_version }}
