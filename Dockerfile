@@ -1,4 +1,4 @@
-ARG PHP_IMAGE=php:7.4-cli
+ARG PHP_VERSION=7.4
 
 FROM php:8.3-cli-bookworm AS phpdocmd-builder
 
@@ -27,7 +27,7 @@ RUN GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o
         --prefer-dist \
     && rm -rf /tmp/composer
 
-FROM ${PHP_IMAGE}
+FROM php:${PHP_VERSION}-cli
 
 COPY --from=phpdocmd-builder /opt/phpdoc-md /opt/phpdoc-md
 COPY bin/entrypoint.sh /usr/local/bin/entrypoint.sh
