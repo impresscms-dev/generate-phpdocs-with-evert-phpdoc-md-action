@@ -107,14 +107,28 @@ async function runAction(actionImage, ignoredFiles, phpDocumentorVersion) {
     ]);
 
     if (execResult.exitCode !== 0) {
-      const stderr = execResult.output
-        .filter((line) => line.type === "STDERR")
-        .map((line) => line.content)
-        .join("\n");
-      const stdout = execResult.output
-        .filter((line) => line.type === "STDOUT")
-        .map((line) => line.content)
-        .join("\n");
+      let stdout = "";
+      let stderr = "";
+
+      if (Array.isArray(execResult.output)) {
+        stdout = execResult.output
+          .filter((line) => line.type === "STDOUT")
+          .map((line) => line.content)
+          .join("\n");
+        stderr = execResult.output
+          .filter((line) => line.type === "STDERR")
+          .map((line) => line.content)
+          .join("\n");
+      } else if (typeof execResult.output === "string") {
+        stdout = execResult.output;
+      }
+
+      if (typeof execResult.stdout === "string") {
+        stdout = execResult.stdout;
+      }
+      if (typeof execResult.stderr === "string") {
+        stderr = execResult.stderr;
+      }
 
       throw new Error(
         `Action execution failed with exit code ${execResult.exitCode}\nSTDOUT:\n${stdout}\nSTDERR:\n${stderr}`
